@@ -56,8 +56,10 @@ void printVirus(virus *virus, FILE *output){
 }
 
 link* list_print(link *virus_list, FILE* output){
+    printf("1\n");
     link *curr = virus_list;
     while(curr->vir != NULL){
+        printf("2\n");
         printVirus(curr->vir, output);
         curr = curr->nextVirus;
     }
@@ -117,6 +119,8 @@ void list_free(link *virus_list){
 link* LoadSig(link* virusList, FILE* input){
     char fileName[50];
     fgets(fileName, 50, stdin);
+    sscanf(fileName, "%s", fileName);
+    printf("%s\n", fileName);
     input = fopen(fileName, "r");
     while (!feof(input)){
         virusList = list_append(virusList, readVirus(input));
@@ -135,25 +139,25 @@ int main(int argc, char **argv) {
     int i;
     int bound;
 
-    bound = sizeof(menu)/sizeof(struct fun_desc) - 2;
+    bound = sizeof(menu)/sizeof(struct fun_desc) - 1;
     link *virusList = (link *)malloc(sizeof(link));
     
     while (1){
         op = -1;
         printf("Please choose a function:\n");
         for (i=0; i < (sizeof(menu)/sizeof(struct fun_desc))-1; i++){
-            printf("%i) %s\n", i, (menu+i)->name);
+            printf("%i) %s\n", i+1, (menu+i)->name);
         }
         printf("Option: ");
         fgets(func_num, 50, stdin);
         sscanf(func_num, "%d", &op);
-            if (op < 0 || op > bound){
+            if (op < 1 || op > bound){
                 printf("Not within bounds\n");
                 exit(0);
             }
             else{
                 printf("Within bounds\n");
-                virusList = (menu[func_num[0] - 48].fun)(virusList, stdout);
+                virusList = (menu[func_num[0] - 49].fun)(virusList, stdout);
                 printf("DONE.\n\n");
             }
         
