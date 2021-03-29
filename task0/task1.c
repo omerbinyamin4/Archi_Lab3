@@ -26,7 +26,7 @@ struct link {
 
 struct fun_desc{
         char *name;
-        link* (*fun)(link*, FILE*);
+        link* (*fun)(void*, unsigned int, link*, FILE*);
     };
 
 
@@ -55,11 +55,9 @@ void printVirus(virus *virus, FILE *output){
     fprintf(output, "\n");
 }
 
-link* list_print(link *virus_list, FILE* output){
-    printf("1\n");
+link* list_print(void *g1, unsigned int g2, link *virus_list, FILE* output){
     link *curr = virus_list;
-    while(curr->vir != NULL){
-        printf("2\n");
+    while((curr != NULL) && (curr->vir != NULL)){
         printVirus(curr->vir, output);
         curr = curr->nextVirus;
     }
@@ -72,7 +70,7 @@ link* list_append(link* virus_list, virus* data){
         (either at the end or the beginning, depending on what your TA tells you),
         and return a pointer to the list (i.e., the first link in the list).
         If the list is null - create a new entry and return a pointer to the entry. */
-        if (virus_list == NULL){
+        if (virus_list->vir == NULL){
             link *newLink = (link *)(malloc(sizeof(link)));
             newLink->nextVirus = NULL;
             newLink->vir = data;
@@ -116,28 +114,52 @@ void list_free(link *virus_list){
 
 }
 
-link* LoadSig(link* virusList, FILE* input){
+link* LoadSig(void *g1, void *g2, link* virusList, FILE* input){
     char fileName[50];
     fgets(fileName, 50, stdin);
     sscanf(fileName, "%s", fileName);
     printf("%s\n", fileName);
     input = fopen(fileName, "r");
+    fseek(input, 4, SEEK_SET);
     while (!feof(input)){
         virusList = list_append(virusList, readVirus(input));
     }
     return virusList;
 }
 
+link* detect_virus(char *buffer, unsigned int size, link *virus_list, FILE *output){
+    unsigned int i;
+    link *curr = virus_list;
+     while((curr != NULL) && (curr->vir != NULL)){
+        for (i=0; i < size-(curr->vir)->SigSize; i++){
+            if (memcmp((curr->vir)->sig, buffer+i, (curr->vir)->SigSize) == 0)
+                fprintf(output, "Startin byte: %d\nVirus Name: %s\nVirus Signature Size: %d\n", i, (curr->vir)->virusName,(curr->vir)->SigSize);
+        }
+        curr = curr->nextVirus;
+    }
+    
+}
+
 int main(int argc, char **argv) {
     struct fun_desc menu[4] = { {"Load signatures", LoadSig},
                                 {"Print signatures", list_print},
-                                {"Detect viruses", list_print},
+                                {"Detect viruses", detect_virus},
                                 {NULL, NULL}
                                 };
     char func_num[50];
     int op;
     int i;
     int bound;
+    unsigned int suspected_size;
+    unsigned min;
+    char buffer[10000];
+    
+    FILE* suspected = fopen(argv[1], "r");
+    suspected_size = (unsigned int)ftell(fseek(suspected, 0, SEEK_END));
+    rewind(suspected);
+
+    min = 10000 > suspected_size ? suspected_size : 10000;
+    fread(buffer, min, 1, suspected);
 
     bound = sizeof(menu)/sizeof(struct fun_desc) - 1;
     link *virusList = (link *)malloc(sizeof(link));
@@ -157,7 +179,7 @@ int main(int argc, char **argv) {
             }
             else{
                 printf("Within bounds\n");
-                virusList = (menu[func_num[0] - 49].fun)(virusList, stdout);
+                virusList = (menu[func_num[0] - 49].fun)(buffer, min, virusList, stdout);
                 printf("DONE.\n\n");
             }
         
