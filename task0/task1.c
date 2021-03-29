@@ -133,7 +133,7 @@ link* detect_virus(char *buffer, unsigned int size, link *virus_list, FILE *outp
      while((curr != NULL) && (curr->vir != NULL)){
         for (i=0; i < size-(curr->vir)->SigSize; i++){
             if (memcmp((curr->vir)->sig, buffer+i, (curr->vir)->SigSize) == 0)
-                fprintf(output, "Startin byte: %d\nVirus Name: %s\nVirus Signature Size: %d\n", i, (curr->vir)->virusName,(curr->vir)->SigSize);
+                fprintf(output, "Starting byte: %d\nVirus Name: %s\nVirus Signature Size: %d\n", i, (curr->vir)->virusName,(curr->vir)->SigSize);
         }
         curr = curr->nextVirus;
     }
@@ -155,10 +155,12 @@ int main(int argc, char **argv) {
     char buffer[10000];
     
     FILE* suspected = fopen(argv[1], "r");
-    suspected_size = (unsigned int)ftell(fseek(suspected, 0, SEEK_END));
+    fseek(suspected, 0L, SEEK_END);
+    suspected_size = (unsigned int)(ftell(suspected));
     rewind(suspected);
 
     min = 10000 > suspected_size ? suspected_size : 10000;
+    
     fread(buffer, min, 1, suspected);
 
     bound = sizeof(menu)/sizeof(struct fun_desc) - 1;
