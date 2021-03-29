@@ -5,7 +5,7 @@
 void PrintHex(unsigned char *buffer, short length, FILE* output){
     int i;
     for (i = 0; i<length; i++){
-        fprintf(output, "%hhX ", *(buffer+i));
+        fprintf(output, "%02X ", *(buffer+i));
     }
     fprintf(output, "\n");
 }
@@ -43,10 +43,9 @@ void printVirus(virus *virus, FILE *output){
 }
 
 int main(int argc, char **argv) {
-    FILE *input = fopen(argv[1], "r");
-    //fseek(input, 4, 0);
-    while (feof(input) != 0){
-        printf("test\n");
+    FILE *input = fopen(argv[1], "r+");
+    fseek(input, 4, SEEK_SET);
+    while (!feof(input)){
         virus *curr = readVirus(input);
         printVirus(curr, stdout);
         free(curr);
