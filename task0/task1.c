@@ -30,15 +30,21 @@ struct fun_desc{
     };
 
 
-virus* readVirus(FILE* input){
+virus* readVirus(FILE* input, char endian){
     //char *sigSize;
     char buffer[18]; 
     unsigned char *sig;
     unsigned short size;
+    size_t isRead;
     //fread(sigSize, 1, 2, input);
-    fread(buffer, 1, 18, input);
+    isRead = fread(buffer, 1, 18, input);
+    if (isRead == 0)
+        return NULL;
     //decode size
-    size = (unsigned short)((buffer[1]&0xff)<<8) + (unsigned short)(buffer[0]&0xff);
+    if (endian == 'L')
+        size = (unsigned short)((buffer[1]&0xff)<<8) + (unsigned short)(buffer[0]&0xff);
+    else
+        size = (unsigned short)((buffer[0]&0xff)<<8) + (unsigned short)(buffer[1]&0xff);
     sig = (unsigned char *)(calloc(size , sizeof(char))); //freed in 52
     fread(sig, 1, size, input);
     virus *output = (virus *)(malloc(sizeof(virus)));
@@ -116,14 +122,19 @@ void list_free(link *virus_list){
 
 link* LoadSig(void *g1, void *g2, link* virusList, FILE* input){
     char fileName[50];
+    char endian[1];
     fgets(fileName, 50, stdin);
     sscanf(fileName, "%s", fileName);
     printf("%s\n", fileName);
     input = fopen(fileName, "r");
+    fseek(input, 3, SEEK_SET);
+    fread(endian, 1, 1, input);
     fseek(input, 4, SEEK_SET);
     while (!feof(input)){
-        virusList = list_append(virusList, readVirus(input));
+        virusList = list_append(virusList, readVirus(input, endian[0]));
     }
+    rewind(input);
+    fclose(input);
     return virusList;
 }
 
@@ -186,4 +197,5 @@ int main(int argc, char **argv) {
             }
         
     }
+    list_free(virusList);
 }
