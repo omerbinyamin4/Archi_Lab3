@@ -140,6 +140,7 @@ link* detect_virus(char *fileName, unsigned int size, link *virus_list, FILE *ou
     char buffer[10000];
     unsigned min;
     unsigned suspected_size;
+
     //set suspected file
     FILE* suspected = fopen(fileName, "r");
     fseek(suspected, 0L, SEEK_END);
@@ -147,15 +148,17 @@ link* detect_virus(char *fileName, unsigned int size, link *virus_list, FILE *ou
     rewind(suspected);
     min = 10000 > suspected_size ? suspected_size : 10000;
     fread(buffer, min, 1, suspected);
+
     link *curr = virus_list;
      while((curr != NULL) && (curr->vir != NULL)){
-        for (i=0; i < size-(curr->vir)->SigSize; i++){
+        for (i=0; i < min-(curr->vir)->SigSize; i++){
             if (memcmp((curr->vir)->sig, buffer+i, (curr->vir)->SigSize) == 0)
                 fprintf(output, "Starting byte: %d\nVirus Name: %s\nVirus Signature Size: %d\n", i, (curr->vir)->virusName,(curr->vir)->SigSize);
         }
         curr = curr->nextVirus;
     }
     fclose(suspected);
+    fclose(output);
     return virus_list;
     
 }
@@ -164,7 +167,7 @@ void kill_virus(char *fileName, int signatureOffset, int signatureSize){
     char toWrite[signatureSize];
     int i;
     for (i=0; i < signatureSize; i++){
-        toWrite[i] = 0x90;
+        toWrite[i] = '\x90';
     }
     FILE *suspected = fopen(fileName, "r+");
     fseek(suspected, signatureOffset, SEEK_SET);
@@ -182,6 +185,7 @@ link* kill_virus_wrapper(char *fileName, unsigned int g1, link *g2, FILE *g3){
     printf("Enter signature size: ");
     fgets(buffer, 50, stdin);
     sscanf(buffer, "%d", &sigSize);
+    printf("%d\n", sigOffset);
     kill_virus(fileName, sigOffset, sigSize);
     return g2;
 }
@@ -216,7 +220,6 @@ int main(int argc, char **argv) {
         sscanf(func_num, "%d", &op);
             if (op < 1 || op > bound){
                 printf("Not within bounds\n");
-                fclose(detected_output);
                 list_free(virusList);
                 exit(0);
             }
